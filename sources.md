@@ -1,10 +1,6 @@
 # Sources
 
-Source and evidence links referenced by `paper.md`.
-
-This file is generated from the current private staging draft and should be source-audited before public release.
-
-## Inline Sources
+Generated from `paper.md`. Audit source quality before public release.
 
 1. [Gallup reported in May 2026](https://news.gallup.com/poll/709772/americans-oppose-data-centers-area.aspx)
 2. [Lawrence Berkeley National Laboratory 2024 U.S. data center energy report](https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf?stream=top)
@@ -55,7 +51,3 @@ This file is generated from the current private staging draft and should be sour
 47. [OpenAI's April 2026 infrastructure post](https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/)
 48. [DOE's Speed to Power work](https://www.energy.gov/speed-to-power)
 49. [CISA's guidance on foreign influence operations targeting critical infrastructure](https://www.cisa.gov/sites/default/files/2022-11/cisa_insight_mitigating_foreign_influence_508.pdf)
-
-## Release Note
-
-Before public release, verify each link, source type, date/freshness, and whether the linked source supports the claim made in the paper.
