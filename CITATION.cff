@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you cite this paper, please cite it using these metadata."
+type: generic
+title: "Legitimacy Is Infrastructure"
+abstract: "A technical position paper arguing that AI data-center legitimacy must be treated as infrastructure: a proof, category-discipline, redesign, local-benefit, and strategic-capacity operating system rather than a late-stage communications function."
+authors:
+  - family-names: "Salmanzadeh"
+    given-names: "Sasan"
+date-released: 2026-05-24
+version: "0.1.0-private"
+repository-code: "https://github.com/saucony/legitimacy-is-infrastructure"
+license: "All rights reserved"

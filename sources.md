@@ -1,0 +1,61 @@
+# Sources
+
+Source and evidence links referenced by `paper.md`.
+
+This file is generated from the current private staging draft and should be source-audited before public release.
+
+## Inline Sources
+
+1. [Gallup reported in May 2026](https://news.gallup.com/poll/709772/americans-oppose-data-centers-area.aspx)
+2. [Lawrence Berkeley National Laboratory 2024 U.S. data center energy report](https://eta-publications.lbl.gov/sites/default/files/2024-12/lbnl-2024-united-states-data-center-energy-usage-report.pdf?stream=top)
+3. [Google publishes](https://sustainability.google/reports/google-2025-environmental-report/)
+4. [Microsoft has published](https://blogs.microsoft.com/on-the-issues/2026/01/13/community-first-ai-infrastructure/)
+5. [AWS publishes](https://sustainability.aboutamazon.com/products-services/aws-cloud)
+6. [Meta publishes](https://sustainability.atmeta.com/2025-sustainability-report/)
+7. [The European Commission](https://energy.ec.europa.eu/topics/energy-efficiency/energy-efficiency-targets-directive-and-rules/energy-efficiency-directive/energy-performance-data-centres_en)
+8. [EIA](https://www.eia.gov/pressroom/releases/press585.php)
+9. [EPA's data-center water materials](https://www.epa.gov/watersense/water-and-data-centers)
+10. [water-related permit guidance](https://www.epa.gov/watersense/water-related-permits-data-centers)
+11. [USGS water-use sources](https://www.usgs.gov/mission-areas/water-resources/science/water-use-united-states)
+12. [EIA's 2026 electricity forecast](https://www.eia.gov/todayinenergy/detail.php?id=64544)
+13. [IEA's Energy and AI work](https://www.iea.org/reports/key-questions-on-energy-and-ai)
+14. [NERC's 2025 Long-Term Reliability Assessment](https://prod.nerc.com/globalassets/our-work/assessments/nerc_ltra_2025.pdf)
+15. [PJM's 2026 market-design discussion](https://www.pjm.com/-/media/DotCom/library/reports-notices/special-reports/2026/20260506-powering-reliability-through-market-design.pdf)
+16. [EPA's 24/7 hourly matching explainer](https://www.epa.gov/green-power-markets/247-hourly-matching-electricity)
+17. [GHG Protocol Scope 2 guidance](https://ghgprotocol.org/scope-2-guidance)
+18. [EPRI's grid-flexible data-center work](https://speed2power.epri.com/strategies/grid-flexible.html)
+19. [National Grid's 2026 AI-grid flexibility trial](https://www.nationalgrid.com/uk-first-trial-ai-grid-technology-successfully-demonstrates-ability-data-centres-adjust-power-needs)
+20. [NLR and NREL's 2025 reservoir thermal energy storage analysis](https://www.nrel.gov/news/detail/program/2025/nlr-analysis-identifies-reservoir-thermal-energy-storage-as-a-solution-for-data-center-cooling-needs)
+21. [DOE's Better Buildings showcase on Iron Mountain's Boyers facility](https://betterbuildingssolutioncenter.energy.gov/showcase-projects/iron-mountain-data-centers-geothermal-cooling-system)
+22. [Lefdal Mine](https://www.lefdalmine.com/data-center/cooling)
+23. [Green Mountain](https://greenmountain.no/data-centers/cooling/)
+24. [Microsoft's heat-reuse material](https://datacenters.microsoft.com/wp-content/uploads/2026/03/FINAL_Azure_HeatReUse_Infographic.pdf)
+25. [ASU's 2026 Phoenix field study summary](https://news.asu.edu/20260518-environment-and-sustainability-turning-down-heat-data-centers)
+26. [OCP's propylene-glycol guidance](https://www.opencompute.org/documents/guidelines-for-using-propylene-glycol-based-heat-transfer-fluids-in-single-phase-cold-plate-based-liquid-cooled-racks-final-pdf)
+27. [EPA's 2026 guidance on Superfund and Brownfield redevelopment for AI data centers](https://www.epa.gov/superfund-redevelopment/reuse-considerations-data-centers-superfund-sites)
+28. [EESI's 2026 coverage of data-center noise concerns](https://www.eesi.org/articles/view/communities-are-raising-noise-pollution-concernsabout-data-centers)
+29. [Virginia JLARC's data-center report](https://jlarc.virginia.gov/pdfs/reports/Rpt598-2.pdf)
+30. [NIOSH's Industrial Noise Control Manual](https://stacks.cdc.gov/view/cdc/209384)
+31. [ASHRAE's liquid-cooling paper](https://www.ashrae.org/file%20library/technical%20resources/bookstore/emergence-and-expansion-of-liquid-cooling-in-mainstream-data-centers_wp.pdf)
+32. [OCP's Open Edge liquid-cooling feasibility paper](https://www.opencompute.org/documents/2024-v1p2-white-paper-open-edge-servers-meet-liquid-cooling-a-feasibility-study-pdf)
+33. [NIOSH's engineering-control guidance](https://www.cdc.gov/niosh/noise/prevent/engineering.html)
+34. [official final canvass](https://www.sandiego.gov/sites/default/files/final_canvass_-_general_novermber_6_2018_0.pdf)
+35. [official voter pamphlet](https://www.sandiego.gov/sites/default/files/voterpamphlet_november2018_0.pdf)
+36. [Voice of San Diego](https://voiceofsandiego.org/2018/10/01/sdsu-cant-say-how-it-will-pay-for-everything-in-sdsu-west-plan/)
+37. [KPBS's Measure G coverage](https://www.kpbs.org/news/2018/nov/07/measure-g-mission-valley-stadium-sdsu-soccer-city/)
+38. [Voice of San Diego's post-election analysis](https://voiceofsandiego.org/2018/11/07/voters-hand-san-diego-state-a-giant-gift-and-a-giant-challenge/)
+39. [KPBS/inewsource vote mapping](https://www.kpbs.org/news/2018/nov/13/mapping-vote-heres-breakdown-how-san-diegans-voted/)
+40. [Major League Soccer awarded San Diego its 30th club in 2023](https://www.mlssoccer.com/news/major-league-soccer-awards-expansion-team-to-san-diego)
+41. [St. Louis Fed](https://www.stlouisfed.org/publications/page-one-economics/2017/05/01/the-economics-of-subsidizing-sports-stadiums)
+42. [Brookings](https://www.brookings.edu/articles/sports-jobs-taxes-are-new-stadiums-worth-the-cost/)
+43. [NADO's 2026 data-center report](https://www.nado.org/wp-content/uploads/2026/03/Data-Centers-Report_03.05.26.pdf)
+44. [NCSL's 2026 incentives snapshot](https://www.ncsl.org/fiscal/policy-snapshot-data-center-incentives)
+45. [Brookings has argued that community benefit agreements are necessary for data centers](https://www.brookings.edu/articles/why-community-benefit-agreements-are-necessary-for-data-centers/)
+46. [NIST SP 800-88 Rev. 2](https://csrc.nist.gov/pubs/sp/800/88/r2/final)
+47. [OpenAI's April 2026 infrastructure post](https://openai.com/index/building-the-compute-infrastructure-for-the-intelligence-age/)
+48. [DOE's Speed to Power work](https://www.energy.gov/speed-to-power)
+49. [CISA's guidance on foreign influence operations targeting critical infrastructure](https://www.cisa.gov/sites/default/files/2022-11/cisa_insight_mitigating_foreign_influence_508.pdf)
+
+## Release Note
+
+Before public release, verify each link, source type, date/freshness, and whether the linked source supports the claim made in the paper.
