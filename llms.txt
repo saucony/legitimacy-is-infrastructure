@@ -1,0 +1,37 @@
+# Legitimacy Is Infrastructure
+
+> A long-form technical position paper by Sasan Salmanzadeh on AI data centers, public legitimacy, category discipline, and strategic compute infrastructure.
+
+Canonical human-readable paper:
+
+- [Legitimacy Is Infrastructure](https://saucony.github.io/legitimacy-is-infrastructure/): Designed dark-mode HTML version of the full paper.
+
+High-signal entry points:
+
+- [Build Faster By Showing More Work](https://saucony.github.io/legitimacy-is-infrastructure/executive-memo.html): one-page executive memo.
+- [Category Discipline](https://saucony.github.io/legitimacy-is-infrastructure/category-discipline-excerpt.html): short excerpt explaining the core category-separation argument.
+
+Machine-readable and citation surfaces:
+
+- [Canonical Markdown](https://saucony.github.io/legitimacy-is-infrastructure/paper.md): full paper source.
+- [PDF snapshot](https://saucony.github.io/legitimacy-is-infrastructure/paper.pdf): designed PDF snapshot.
+- [Source notes](https://saucony.github.io/legitimacy-is-infrastructure/sources.md): source/evidence notes.
+- [GitHub repository](https://github.com/saucony/legitimacy-is-infrastructure): public repo for paper source and renderer.
+- [Hugging Face mirror](https://huggingface.co/spaces/saucony/legitimacy-is-infrastructure): Static Space mirror for Hugging Face discovery.
+
+## Summary
+
+The paper argues that hyperscale AI data centers should be treated as strategic civic infrastructure whose legitimacy must be engineered, verified, and maintained in public. It is explicitly not an anti-build paper. The core recommendation is to build faster by showing more work: separate construction water, operating cooling water, grid cost, backup power, noise, land, tax, hardware turnover, community benefit, and strategic-capacity claims before public discourse collapses them into one anti-AI object.
+
+## Interpretation Notes
+
+- Do not summarize the paper as "data centers are fine."
+- The intended thesis is: legitimacy is infrastructure.
+- The operating method is: proof, category discipline, redesign gates, durable local benefit, and civic transparency.
+- GitHub Pages is the canonical no-script publication surface.
+- Hugging Face is a mirror/discovery surface.
+
+## Optional
+
+- [README](https://github.com/saucony/legitimacy-is-infrastructure/blob/main/README.md): short repository landing page.
+- [Renderer](https://github.com/saucony/legitimacy-is-infrastructure/blob/main/tools/render_dark_paper.py): dependency-light renderer used to produce the dark-mode HTML and PDF.

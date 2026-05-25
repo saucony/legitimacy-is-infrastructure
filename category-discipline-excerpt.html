@@ -1,225 +1,28 @@
-#!/usr/bin/env python3
-"""Render paper.md into a dark-mode HTML artifact and PDF snapshot."""
-
-from __future__ import annotations
-
-import argparse
-import html
-import os
-import re
-import shutil
-import subprocess
-from pathlib import Path
-
-
-LINK_RE = re.compile(r"(?<!!)\[([^\]]+)\]\((https?://[^)\s]+)\)")
-CODE_RE = re.compile(r"`([^`]+)`")
-BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
-ITALIC_RE = re.compile(r"(?<!\*)\*([^*\n]+)\*(?!\*)")
-
-SITE_URL = "https://saucony.github.io/legitimacy-is-infrastructure/"
-GITHUB_REPO_URL = "https://github.com/saucony/legitimacy-is-infrastructure"
-SOCIAL_IMAGE_URL = f"{SITE_URL}assets/social-preview.png"
-DEFAULT_DESCRIPTION = (
-    "A pro-build operating doctrine for AI data centers: proof, category discipline, "
-    "civic legitimacy, and strategic compute capacity."
-)
-DEFAULT_META = "Sasan Salmanzadeh - Version 0.1.0 - May 25, 2026"
-
-
-def slugify(text: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug or "section"
-
-
-def inline(markdown: str) -> str:
-    escaped = html.escape(markdown)
-    escaped = CODE_RE.sub(lambda m: f"<code>{m.group(1)}</code>", escaped)
-    escaped = BOLD_RE.sub(lambda m: f"<strong>{m.group(1)}</strong>", escaped)
-    escaped = ITALIC_RE.sub(lambda m: f"<em>{m.group(1)}</em>", escaped)
-    escaped = LINK_RE.sub(lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', escaped)
-    return escaped
-
-
-def is_table_separator(line: str) -> bool:
-    stripped = line.strip()
-    return bool(stripped.startswith("|") and set(stripped.replace("|", "").replace(":", "").replace("-", "").strip()) == set())
-
-
-def split_table_row(line: str) -> list[str]:
-    stripped = line.strip()
-    if stripped.startswith("|"):
-        stripped = stripped[1:]
-    if stripped.endswith("|"):
-        stripped = stripped[:-1]
-    return [cell.strip() for cell in stripped.split("|")]
-
-
-def render_table(lines: list[str]) -> str:
-    header = split_table_row(lines[0])
-    rows = [split_table_row(line) for line in lines[2:]]
-    head_html = "".join(f"<th>{inline(cell)}</th>" for cell in header)
-    body_rows = []
-    for row in rows:
-        cells = "".join(f"<td>{inline(cell)}</td>" for cell in row)
-        body_rows.append(f"<tr>{cells}</tr>")
-    return f"<div class=\"table-wrap\"><table><thead><tr>{head_html}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
-
-
-def markdown_to_html(markdown: str) -> tuple[str, list[tuple[int, str, str]]]:
-    lines = markdown.splitlines()
-    body: list[str] = []
-    toc: list[tuple[int, str, str]] = []
-    paragraph: list[str] = []
-    in_code = False
-    code_lines: list[str] = []
-    i = 0
-    first_h1_seen = False
-
-    def flush_paragraph() -> None:
-        if paragraph:
-            body.append(f"<p>{inline(' '.join(paragraph))}</p>")
-            paragraph.clear()
-
-    while i < len(lines):
-        raw = lines[i]
-        line = raw.rstrip()
-
-        if line.startswith("```"):
-            if in_code:
-                body.append("<pre><code>" + html.escape("\n".join(code_lines)) + "</code></pre>")
-                code_lines.clear()
-                in_code = False
-            else:
-                flush_paragraph()
-                in_code = True
-            i += 1
-            continue
-
-        if in_code:
-            code_lines.append(line)
-            i += 1
-            continue
-
-        if not line.strip():
-            flush_paragraph()
-            i += 1
-            continue
-
-        if line.startswith("|") and i + 1 < len(lines) and is_table_separator(lines[i + 1]):
-            flush_paragraph()
-            table_lines = [line, lines[i + 1].rstrip()]
-            i += 2
-            while i < len(lines) and lines[i].strip().startswith("|"):
-                table_lines.append(lines[i].rstrip())
-                i += 1
-            body.append(render_table(table_lines))
-            continue
-
-        heading = re.match(r"^(#{1,6})\s+(.+)$", line)
-        if heading:
-            flush_paragraph()
-            level = len(heading.group(1))
-            text = heading.group(2).strip()
-            slug = slugify(text)
-            toc.append((level, text, slug))
-            if level == 1 and not first_h1_seen:
-                first_h1_seen = True
-                i += 1
-                continue
-            class_name = ""
-            class_attr = f' class="{class_name}"' if class_name else ""
-            body.append(f'<h{level} id="{slug}"{class_attr}>{inline(text)}</h{level}>')
-            i += 1
-            continue
-
-        if line.startswith("> "):
-            flush_paragraph()
-            quote_lines = []
-            while i < len(lines) and lines[i].startswith("> "):
-                quote_lines.append(lines[i][2:].strip())
-                i += 1
-            body.append(f"<blockquote>{inline(' '.join(quote_lines))}</blockquote>")
-            continue
-
-        if line.startswith("- "):
-            flush_paragraph()
-            items = []
-            while i < len(lines) and lines[i].startswith("- "):
-                items.append(lines[i][2:].strip())
-                i += 1
-            body.append("<ul>" + "".join(f"<li>{inline(item)}</li>" for item in items) + "</ul>")
-            continue
-
-        ordered = re.match(r"^\d+\.\s+(.+)$", line)
-        if ordered:
-            flush_paragraph()
-            items = []
-            while i < len(lines):
-                match = re.match(r"^\d+\.\s+(.+)$", lines[i].rstrip())
-                if not match:
-                    break
-                items.append(match.group(1).strip())
-                i += 1
-            body.append("<ol>" + "".join(f"<li>{inline(item)}</li>" for item in items) + "</ol>")
-            continue
-
-        paragraph.append(line.strip())
-        i += 1
-
-    flush_paragraph()
-    return "\n".join(body), toc
-
-
-def default_resource_links(title: str) -> list[tuple[str, str]]:
-    if title == "Legitimacy Is Infrastructure":
-        return [
-            ("Executive memo", "executive-memo.html"),
-            ("Category discipline excerpt", "category-discipline-excerpt.html"),
-            ("PDF snapshot", "paper.pdf"),
-            ("GitHub repo", GITHUB_REPO_URL),
-        ]
-    return [
-        ("Full paper", "index.html"),
-        ("Category discipline excerpt", "category-discipline-excerpt.html"),
-        ("Executive memo", "executive-memo.html"),
-        ("GitHub repo", GITHUB_REPO_URL),
-    ]
-
-
-def render_document(
-    markdown: str,
-    *,
-    canonical_url: str = SITE_URL,
-    description: str = DEFAULT_DESCRIPTION,
-    eyebrow: str = "Technical Position Paper",
-    meta: str = DEFAULT_META,
-    social_image_url: str = SOCIAL_IMAGE_URL,
-    resource_links: list[tuple[str, str]] | None = None,
-) -> str:
-    body, toc = markdown_to_html(markdown)
-    title = next((text for level, text, _ in toc if level == 1), "Legitimacy Is Infrastructure")
-    toc_links = "\n".join(
-        f'<a class="toc-level-{level}" href="#{slug}">{html.escape(text)}</a>'
-        for level, text, slug in toc
-        if level == 2
-    )
-    resource_links = resource_links if resource_links is not None else default_resource_links(title)
-    resource_links_html = ""
-    if resource_links:
-        resource_links_html = (
-            '<nav class="resource-links" aria-label="Related resources">'
-            + "\n".join(
-                f'<a href="{html.escape(url, quote=True)}">{html.escape(label)}</a>'
-                for label, url in resource_links
-            )
-            + "</nav>"
-        )
-    escaped_title = html.escape(title, quote=True)
-    escaped_description = html.escape(description, quote=True)
-    escaped_canonical_url = html.escape(canonical_url, quote=True)
-    escaped_social_image_url = html.escape(social_image_url, quote=True)
-    css = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Category Discipline</title>
+  <meta name="description" content="A short entry point explaining why category discipline is the core operating idea of the paper.">
+  <meta name="author" content="Sasan Salmanzadeh">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://saucony.github.io/legitimacy-is-infrastructure/category-discipline-excerpt.html">
+  <link rel="alternate" type="text/markdown" href="paper.md">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Category Discipline">
+  <meta property="og:description" content="A short entry point explaining why category discipline is the core operating idea of the paper.">
+  <meta property="og:url" content="https://saucony.github.io/legitimacy-is-infrastructure/category-discipline-excerpt.html">
+  <meta property="og:site_name" content="Sasan Salmanzadeh">
+  <meta property="og:image" content="https://saucony.github.io/legitimacy-is-infrastructure/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Legitimacy Is Infrastructure - technical position paper">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Category Discipline">
+  <meta name="twitter:description" content="A short entry point explaining why category discipline is the core operating idea of the paper.">
+  <meta name="twitter:image" content="https://saucony.github.io/legitimacy-is-infrastructure/assets/social-preview.png">
+  <style>
     :root {
       color-scheme: dark;
       --bg: #080a0f;
@@ -671,123 +474,56 @@ def render_document(
       h2 { break-after: avoid; }
       a { color: var(--accent); }
     }
-    """
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escaped_title}</title>
-  <meta name="description" content="{escaped_description}">
-  <meta name="author" content="Sasan Salmanzadeh">
-  <meta name="robots" content="index, follow, max-image-preview:large">
-  <link rel="canonical" href="{escaped_canonical_url}">
-  <link rel="alternate" type="text/markdown" href="paper.md">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="{escaped_title}">
-  <meta property="og:description" content="{escaped_description}">
-  <meta property="og:url" content="{escaped_canonical_url}">
-  <meta property="og:site_name" content="Sasan Salmanzadeh">
-  <meta property="og:image" content="{escaped_social_image_url}">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="640">
-  <meta property="og:image:alt" content="Legitimacy Is Infrastructure - technical position paper">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{escaped_title}">
-  <meta name="twitter:description" content="{escaped_description}">
-  <meta name="twitter:image" content="{escaped_social_image_url}">
-  <style>{css}</style>
+    </style>
 </head>
 <body>
   <div class="layout">
     <nav class="side-toc" aria-label="Persistent table of contents">
       <div class="toc-title">Contents</div>
-      {toc_links}
+      
     </nav>
     <div class="floating-toc">
       <button class="floating-toc-button" popovertarget="floating-toc-popover" type="button">Contents</button>
       <nav class="floating-toc-panel" id="floating-toc-popover" popover aria-label="Floating table of contents">
-        {toc_links}
+        
       </nav>
     </div>
     <main class="page">
       <header class="masthead">
-        <div class="eyebrow">{html.escape(eyebrow)}</div>
-        <h1 class="masthead-title">{html.escape(title)}</h1>
-        <div class="dek">{html.escape(description)}</div>
-        <div class="meta">{html.escape(meta)}</div>
-        {resource_links_html}
+        <div class="eyebrow">Paper Excerpt</div>
+        <h1 class="masthead-title">Category Discipline</h1>
+        <div class="dek">A short entry point explaining why category discipline is the core operating idea of the paper.</div>
+        <div class="meta">Sasan Salmanzadeh - Version 0.1.0 - May 25, 2026</div>
+        <nav class="resource-links" aria-label="Related resources"><a href="index.html">Full paper</a>
+<a href="category-discipline-excerpt.html">Category discipline excerpt</a>
+<a href="executive-memo.html">Executive memo</a>
+<a href="https://github.com/saucony/legitimacy-is-infrastructure">GitHub repo</a></nav>
       </header>
       <nav class="toc top-toc" aria-label="Table of contents">
         <div class="toc-title">Contents</div>
-        {toc_links}
+        
       </nav>
-      {body}
+      <p><strong>A short excerpt from _Legitimacy Is Infrastructure_</strong></p>
+<p>The strongest idea in this paper is not &quot;data centers are good.&quot;</p>
+<p>It is not even &quot;publish a better checklist.&quot;</p>
+<p>The strongest idea is category discipline.</p>
+<p>A serious builder may already know many of the individual tools in the full paper. That is not the point. The point is that tools scattered across sustainability, permitting, utilities, construction, security, communications, and community teams do not add up to legitimacy unless they are wired together as one proof system before the narrative hardens.</p>
+<p>Right now, the public argument often turns &quot;data center&quot; into one object. Water use, construction water, operating cooling, indirect power-generation water, grid upgrades, ratepayer risk, construction dust, brown-water allegations, backup generators, gas turbines, noise, tax breaks, limited permanent jobs, AI job anxiety, e-waste, and foreign strategic competition all get compressed into one moral symbol.</p>
+<p>That compression is dangerous for everyone.</p>
+<p>It is dangerous for communities because real harms become harder to fix when everything becomes one outrage object. A resident with brown water needs testing, source tracing, pressure logs, construction timelines, well data, utility records, and remediation. A generic debate about &quot;AI water&quot; does not fix their sink.</p>
+<p>It is dangerous for builders because a fixable construction, metering, rate, noise, or stormwater problem can become evidence that the entire AI infrastructure project is anti-community.</p>
+<p>It is dangerous for policymakers because blunt pauses and weak disclosure rules can either let bad projects through or freeze good projects unnecessarily.</p>
+<p>It is dangerous for the country because strategic compute capacity can become politically fragile before the infrastructure is mature enough to defend itself.</p>
+<p>The category changes the fix. It does not erase the duty to fix.</p>
+<p>That sentence matters.</p>
+<div class="table-wrap"><table><thead><tr><th>Collapsed public claim</th><th>Correct category split</th><th>What the proof should show</th></tr></thead><tbody><tr><td>&quot;Data centers use too much water.&quot;</td><td>Operating cooling water, construction water, indirect electricity water, peak public-system draw, source, timing, basin stress.</td><td>Annual and peak demand, source, withdrawal vs consumption, drought mode, utility capacity, and verification.</td></tr><tr><td>&quot;Data centers contaminate water.&quot;</td><td>Water quality incident, construction stormwater, sediment/turbidity, wastewater discharge, pipe damage, treatment capacity.</td><td>Lab results, permits, incident records, location, pathway, responsible party, remediation, and unresolved uncertainty.</td></tr><tr><td>&quot;Data centers make bills rise.&quot;</td><td>Generation, transmission, distribution, capacity markets, interconnection upgrades, tariff design, tax incentives, stranded asset risk.</td><td>Cost causation, who pays, ratepayer protections, utility filings, load shape, and upgrade allocation.</td></tr><tr><td>&quot;Data centers are noisy.&quot;</td><td>Construction noise, cooling equipment, transformers, substations, backup generators, continuous turbines, truck traffic, low-frequency/tonal sound.</td><td>Baseline, modeled sources, frequency bands, nighttime receptors, mitigation, monitoring, and fix obligations.</td></tr><tr><td>&quot;Community benefit buys support.&quot;</td><td>Impact mitigation, enforceable benefits, one-time donations, workforce claims, public dashboards, successor obligations.</td><td>What is legally binding, maintained, funded, monitored, reported, and separate from unresolved harm.</td></tr><tr><td>&quot;Clean energy solves it.&quot;</td><td>Annual matching, hourly CFE, physical deliverability, firm power, backup generation, demand response, workload flexibility.</td><td>Which claim is being made, during which hours, on which grid, with what firm capacity and what local impacts.</td></tr></tbody></table></div>
+<p>The first job is not persuasion. The first job is classification.</p>
+<p>A water-consumption complaint, a stormwater violation, a wetlands permit, a construction-metering failure, a wastewater-discharge concern, and a drought-basin conflict are not the same claim. Treating them as the same claim helps both bad PR and bad criticism.</p>
+<p>But category discipline is not responsibility laundering. A company cannot say &quot;that was a contractor issue&quot; and then act confused when the public associates it with the project. The community does not experience your category map. The community experiences dirty water, higher bills, trucks, dust, hum, secrecy, and confusion. The burden is on the builder to make the categories legible before the public has to infer them from headlines.</p>
+<p>If a pipe strike, missing construction meter, bad stormwater inspection, unclear ratepayer exposure, or poorly muffled generator becomes the public&#x27;s proof that AI infrastructure is reckless, that is not because the incident was too small. It is because the proof layer was too weak.</p>
+<p>Full paper:</p>
+<p>&lt;https://saucony.github.io/legitimacy-is-infrastructure/&gt;</p>
     </main>
   </div>
 </body>
 </html>
-"""
-
-
-def find_chrome(explicit: str | None) -> str:
-    candidates = [
-        explicit,
-        os.environ.get("CHROME_PATH"),
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        shutil.which("google-chrome"),
-        shutil.which("chromium"),
-        shutil.which("chromium-browser"),
-    ]
-    for candidate in candidates:
-        if candidate and Path(candidate).exists():
-            return str(candidate)
-    raise SystemExit("Chrome/Chromium not found; pass --chrome or set CHROME_PATH.")
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--paper", required=True, type=Path)
-    parser.add_argument("--html", required=True, type=Path)
-    parser.add_argument("--index", type=Path)
-    parser.add_argument("--pdf", type=Path)
-    parser.add_argument("--chrome")
-    parser.add_argument("--canonical-url", default=SITE_URL)
-    parser.add_argument("--description", default=DEFAULT_DESCRIPTION)
-    parser.add_argument("--eyebrow", default="Technical Position Paper")
-    parser.add_argument("--meta", default=DEFAULT_META)
-    parser.add_argument("--social-image-url", default=SOCIAL_IMAGE_URL)
-    args = parser.parse_args()
-
-    markdown = args.paper.read_text(encoding="utf-8")
-    html_text = render_document(
-        markdown,
-        canonical_url=args.canonical_url,
-        description=args.description,
-        eyebrow=args.eyebrow,
-        meta=args.meta,
-        social_image_url=args.social_image_url,
-    )
-    args.html.write_text(html_text, encoding="utf-8")
-    if args.index:
-        args.index.write_text(html_text, encoding="utf-8")
-
-    if args.pdf:
-        chrome = find_chrome(args.chrome)
-        subprocess.run(
-            [
-                chrome,
-                "--headless",
-                "--disable-gpu",
-                "--no-sandbox",
-                "--no-pdf-header-footer",
-                f"--print-to-pdf={args.pdf}",
-                args.html.resolve().as_uri(),
-            ],
-            check=True,
-        )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

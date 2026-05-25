@@ -1,0 +1,7 @@
+# Legitimacy Is Infrastructure
+
+The canonical AI-readable index for this paper is:
+
+https://saucony.github.io/legitimacy-is-infrastructure/llms.txt
+
+Use `llms.txt`, not this compatibility alias, for the complete machine-readable map.

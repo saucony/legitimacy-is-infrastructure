@@ -11,6 +11,8 @@ The answer is not PR. The answer is proof, category discipline, redesign gates, 
 ## Read
 
 - [Designed dark-mode paper](https://saucony.github.io/legitimacy-is-infrastructure/)
+- [One-page executive memo](https://saucony.github.io/legitimacy-is-infrastructure/executive-memo.html)
+- [Category Discipline excerpt](https://saucony.github.io/legitimacy-is-infrastructure/category-discipline-excerpt.html)
 - [Canonical Markdown](paper.md)
 - [PDF snapshot](paper.pdf)
 - [Source notes](sources.md)
@@ -29,6 +31,15 @@ To regenerate the designed artifacts locally:
 
 ```sh
 python3 tools/render_dark_paper.py --paper paper.md --html paper.html --index index.html --pdf paper.pdf
+python3 tools/render_dark_paper.py --paper executive-memo.md --html executive-memo.html --canonical-url https://saucony.github.io/legitimacy-is-infrastructure/executive-memo.html --eyebrow "Executive Memo" --description "A one-page executive entry point for the paper's argument: build faster by showing more work."
+python3 tools/render_dark_paper.py --paper category-discipline-excerpt.md --html category-discipline-excerpt.html --canonical-url https://saucony.github.io/legitimacy-is-infrastructure/category-discipline-excerpt.html --eyebrow "Paper Excerpt" --description "A short entry point explaining why category discipline is the core operating idea of the paper."
+python3 tools/render_social_preview.py --output assets/social-preview.png
 ```
 
 The renderer uses only Python standard library plus local Chrome/Chromium for PDF export.
+
+## Discovery
+
+- [robots.txt](robots.txt)
+- [sitemap.xml](sitemap.xml)
+- [llms.txt](llms.txt)

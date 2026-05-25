@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://saucony.github.io/legitimacy-is-infrastructure/sitemap.xml

@@ -1,225 +1,28 @@
-#!/usr/bin/env python3
-"""Render paper.md into a dark-mode HTML artifact and PDF snapshot."""
-
-from __future__ import annotations
-
-import argparse
-import html
-import os
-import re
-import shutil
-import subprocess
-from pathlib import Path
-
-
-LINK_RE = re.compile(r"(?<!!)\[([^\]]+)\]\((https?://[^)\s]+)\)")
-CODE_RE = re.compile(r"`([^`]+)`")
-BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
-ITALIC_RE = re.compile(r"(?<!\*)\*([^*\n]+)\*(?!\*)")
-
-SITE_URL = "https://saucony.github.io/legitimacy-is-infrastructure/"
-GITHUB_REPO_URL = "https://github.com/saucony/legitimacy-is-infrastructure"
-SOCIAL_IMAGE_URL = f"{SITE_URL}assets/social-preview.png"
-DEFAULT_DESCRIPTION = (
-    "A pro-build operating doctrine for AI data centers: proof, category discipline, "
-    "civic legitimacy, and strategic compute capacity."
-)
-DEFAULT_META = "Sasan Salmanzadeh - Version 0.1.0 - May 25, 2026"
-
-
-def slugify(text: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug or "section"
-
-
-def inline(markdown: str) -> str:
-    escaped = html.escape(markdown)
-    escaped = CODE_RE.sub(lambda m: f"<code>{m.group(1)}</code>", escaped)
-    escaped = BOLD_RE.sub(lambda m: f"<strong>{m.group(1)}</strong>", escaped)
-    escaped = ITALIC_RE.sub(lambda m: f"<em>{m.group(1)}</em>", escaped)
-    escaped = LINK_RE.sub(lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', escaped)
-    return escaped
-
-
-def is_table_separator(line: str) -> bool:
-    stripped = line.strip()
-    return bool(stripped.startswith("|") and set(stripped.replace("|", "").replace(":", "").replace("-", "").strip()) == set())
-
-
-def split_table_row(line: str) -> list[str]:
-    stripped = line.strip()
-    if stripped.startswith("|"):
-        stripped = stripped[1:]
-    if stripped.endswith("|"):
-        stripped = stripped[:-1]
-    return [cell.strip() for cell in stripped.split("|")]
-
-
-def render_table(lines: list[str]) -> str:
-    header = split_table_row(lines[0])
-    rows = [split_table_row(line) for line in lines[2:]]
-    head_html = "".join(f"<th>{inline(cell)}</th>" for cell in header)
-    body_rows = []
-    for row in rows:
-        cells = "".join(f"<td>{inline(cell)}</td>" for cell in row)
-        body_rows.append(f"<tr>{cells}</tr>")
-    return f"<div class=\"table-wrap\"><table><thead><tr>{head_html}</tr></thead><tbody>{''.join(body_rows)}</tbody></table></div>"
-
-
-def markdown_to_html(markdown: str) -> tuple[str, list[tuple[int, str, str]]]:
-    lines = markdown.splitlines()
-    body: list[str] = []
-    toc: list[tuple[int, str, str]] = []
-    paragraph: list[str] = []
-    in_code = False
-    code_lines: list[str] = []
-    i = 0
-    first_h1_seen = False
-
-    def flush_paragraph() -> None:
-        if paragraph:
-            body.append(f"<p>{inline(' '.join(paragraph))}</p>")
-            paragraph.clear()
-
-    while i < len(lines):
-        raw = lines[i]
-        line = raw.rstrip()
-
-        if line.startswith("```"):
-            if in_code:
-                body.append("<pre><code>" + html.escape("\n".join(code_lines)) + "</code></pre>")
-                code_lines.clear()
-                in_code = False
-            else:
-                flush_paragraph()
-                in_code = True
-            i += 1
-            continue
-
-        if in_code:
-            code_lines.append(line)
-            i += 1
-            continue
-
-        if not line.strip():
-            flush_paragraph()
-            i += 1
-            continue
-
-        if line.startswith("|") and i + 1 < len(lines) and is_table_separator(lines[i + 1]):
-            flush_paragraph()
-            table_lines = [line, lines[i + 1].rstrip()]
-            i += 2
-            while i < len(lines) and lines[i].strip().startswith("|"):
-                table_lines.append(lines[i].rstrip())
-                i += 1
-            body.append(render_table(table_lines))
-            continue
-
-        heading = re.match(r"^(#{1,6})\s+(.+)$", line)
-        if heading:
-            flush_paragraph()
-            level = len(heading.group(1))
-            text = heading.group(2).strip()
-            slug = slugify(text)
-            toc.append((level, text, slug))
-            if level == 1 and not first_h1_seen:
-                first_h1_seen = True
-                i += 1
-                continue
-            class_name = ""
-            class_attr = f' class="{class_name}"' if class_name else ""
-            body.append(f'<h{level} id="{slug}"{class_attr}>{inline(text)}</h{level}>')
-            i += 1
-            continue
-
-        if line.startswith("> "):
-            flush_paragraph()
-            quote_lines = []
-            while i < len(lines) and lines[i].startswith("> "):
-                quote_lines.append(lines[i][2:].strip())
-                i += 1
-            body.append(f"<blockquote>{inline(' '.join(quote_lines))}</blockquote>")
-            continue
-
-        if line.startswith("- "):
-            flush_paragraph()
-            items = []
-            while i < len(lines) and lines[i].startswith("- "):
-                items.append(lines[i][2:].strip())
-                i += 1
-            body.append("<ul>" + "".join(f"<li>{inline(item)}</li>" for item in items) + "</ul>")
-            continue
-
-        ordered = re.match(r"^\d+\.\s+(.+)$", line)
-        if ordered:
-            flush_paragraph()
-            items = []
-            while i < len(lines):
-                match = re.match(r"^\d+\.\s+(.+)$", lines[i].rstrip())
-                if not match:
-                    break
-                items.append(match.group(1).strip())
-                i += 1
-            body.append("<ol>" + "".join(f"<li>{inline(item)}</li>" for item in items) + "</ol>")
-            continue
-
-        paragraph.append(line.strip())
-        i += 1
-
-    flush_paragraph()
-    return "\n".join(body), toc
-
-
-def default_resource_links(title: str) -> list[tuple[str, str]]:
-    if title == "Legitimacy Is Infrastructure":
-        return [
-            ("Executive memo", "executive-memo.html"),
-            ("Category discipline excerpt", "category-discipline-excerpt.html"),
-            ("PDF snapshot", "paper.pdf"),
-            ("GitHub repo", GITHUB_REPO_URL),
-        ]
-    return [
-        ("Full paper", "index.html"),
-        ("Category discipline excerpt", "category-discipline-excerpt.html"),
-        ("Executive memo", "executive-memo.html"),
-        ("GitHub repo", GITHUB_REPO_URL),
-    ]
-
-
-def render_document(
-    markdown: str,
-    *,
-    canonical_url: str = SITE_URL,
-    description: str = DEFAULT_DESCRIPTION,
-    eyebrow: str = "Technical Position Paper",
-    meta: str = DEFAULT_META,
-    social_image_url: str = SOCIAL_IMAGE_URL,
-    resource_links: list[tuple[str, str]] | None = None,
-) -> str:
-    body, toc = markdown_to_html(markdown)
-    title = next((text for level, text, _ in toc if level == 1), "Legitimacy Is Infrastructure")
-    toc_links = "\n".join(
-        f'<a class="toc-level-{level}" href="#{slug}">{html.escape(text)}</a>'
-        for level, text, slug in toc
-        if level == 2
-    )
-    resource_links = resource_links if resource_links is not None else default_resource_links(title)
-    resource_links_html = ""
-    if resource_links:
-        resource_links_html = (
-            '<nav class="resource-links" aria-label="Related resources">'
-            + "\n".join(
-                f'<a href="{html.escape(url, quote=True)}">{html.escape(label)}</a>'
-                for label, url in resource_links
-            )
-            + "</nav>"
-        )
-    escaped_title = html.escape(title, quote=True)
-    escaped_description = html.escape(description, quote=True)
-    escaped_canonical_url = html.escape(canonical_url, quote=True)
-    escaped_social_image_url = html.escape(social_image_url, quote=True)
-    css = """
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build Faster By Showing More Work</title>
+  <meta name="description" content="A one-page executive entry point for the paper&#x27;s argument: build faster by showing more work.">
+  <meta name="author" content="Sasan Salmanzadeh">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://saucony.github.io/legitimacy-is-infrastructure/executive-memo.html">
+  <link rel="alternate" type="text/markdown" href="paper.md">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Build Faster By Showing More Work">
+  <meta property="og:description" content="A one-page executive entry point for the paper&#x27;s argument: build faster by showing more work.">
+  <meta property="og:url" content="https://saucony.github.io/legitimacy-is-infrastructure/executive-memo.html">
+  <meta property="og:site_name" content="Sasan Salmanzadeh">
+  <meta property="og:image" content="https://saucony.github.io/legitimacy-is-infrastructure/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Legitimacy Is Infrastructure - technical position paper">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Build Faster By Showing More Work">
+  <meta name="twitter:description" content="A one-page executive entry point for the paper&#x27;s argument: build faster by showing more work.">
+  <meta name="twitter:image" content="https://saucony.github.io/legitimacy-is-infrastructure/assets/social-preview.png">
+  <style>
     :root {
       color-scheme: dark;
       --bg: #080a0f;
@@ -671,123 +474,60 @@ def render_document(
       h2 { break-after: avoid; }
       a { color: var(--accent); }
     }
-    """
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escaped_title}</title>
-  <meta name="description" content="{escaped_description}">
-  <meta name="author" content="Sasan Salmanzadeh">
-  <meta name="robots" content="index, follow, max-image-preview:large">
-  <link rel="canonical" href="{escaped_canonical_url}">
-  <link rel="alternate" type="text/markdown" href="paper.md">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="{escaped_title}">
-  <meta property="og:description" content="{escaped_description}">
-  <meta property="og:url" content="{escaped_canonical_url}">
-  <meta property="og:site_name" content="Sasan Salmanzadeh">
-  <meta property="og:image" content="{escaped_social_image_url}">
-  <meta property="og:image:width" content="1280">
-  <meta property="og:image:height" content="640">
-  <meta property="og:image:alt" content="Legitimacy Is Infrastructure - technical position paper">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{escaped_title}">
-  <meta name="twitter:description" content="{escaped_description}">
-  <meta name="twitter:image" content="{escaped_social_image_url}">
-  <style>{css}</style>
+    </style>
 </head>
 <body>
   <div class="layout">
     <nav class="side-toc" aria-label="Persistent table of contents">
       <div class="toc-title">Contents</div>
-      {toc_links}
+      
     </nav>
     <div class="floating-toc">
       <button class="floating-toc-button" popovertarget="floating-toc-popover" type="button">Contents</button>
       <nav class="floating-toc-panel" id="floating-toc-popover" popover aria-label="Floating table of contents">
-        {toc_links}
+        
       </nav>
     </div>
     <main class="page">
       <header class="masthead">
-        <div class="eyebrow">{html.escape(eyebrow)}</div>
-        <h1 class="masthead-title">{html.escape(title)}</h1>
-        <div class="dek">{html.escape(description)}</div>
-        <div class="meta">{html.escape(meta)}</div>
-        {resource_links_html}
+        <div class="eyebrow">Executive Memo</div>
+        <h1 class="masthead-title">Build Faster By Showing More Work</h1>
+        <div class="dek">A one-page executive entry point for the paper&#x27;s argument: build faster by showing more work.</div>
+        <div class="meta">Sasan Salmanzadeh - Version 0.1.0 - May 25, 2026</div>
+        <nav class="resource-links" aria-label="Related resources"><a href="index.html">Full paper</a>
+<a href="category-discipline-excerpt.html">Category discipline excerpt</a>
+<a href="executive-memo.html">Executive memo</a>
+<a href="https://github.com/saucony/legitimacy-is-infrastructure">GitHub repo</a></nav>
       </header>
       <nav class="toc top-toc" aria-label="Table of contents">
         <div class="toc-title">Contents</div>
-        {toc_links}
+        
       </nav>
-      {body}
+      <p><strong>A one-page executive memo for _Legitimacy Is Infrastructure_</strong></p>
+<p>AI data centers are strategic infrastructure. They are not bad by default. They are also not ordinary buildings.</p>
+<p>Hyperscale AI campuses concentrate power demand, water anxiety, land-use change, construction disruption, tax politics, backup generation, noise, security opacity, workforce claims, utility risk, hardware turnover, and strategic national capacity inside one physical site. That combination changes the burden of proof.</p>
+<p>The core claim of the paper is simple:</p>
+<p><strong>Legitimacy is now infrastructure.</strong></p>
+<p>The answer is not PR. The answer is proof.</p>
+<p>The stronger answer is a different build philosophy: design AI data centers more like football clubs and less like black-box compounds. Not fandom. Not sportswashing. Not a logo on a youth program while unresolved water, power, noise, land, tax, or community issues sit underneath the surface. The useful analogy is institutional: a serious football club is rooted in place, has visible performance, takes public criticism, shows a scoreboard, has rituals, and gives supporters rational reasons to want the institution improved instead of removed.</p>
+<p>Many data centers do not have that relationship with the communities they enter. They are experienced as extraction without relationship: land, power, water, patience, silence, public capacity, and tax treatment go in; most of the upside goes somewhere else.</p>
+<p>That does not mean every critic is right. It means too much ambiguity has been left unmanaged.</p>
+<p>A data void does not stay empty. It fills with fear, rumor, politics, resentment, and sometimes conspiracy.</p>
+<p>The industry needs category discipline. It needs to stop letting every water issue, construction issue, grid issue, noise issue, tax issue, e-waste issue, and AI anxiety collapse into one anti-AI object. A construction water mistake is not operating cooling water. Brown-water allegations are not the same as indirect power-generation water. Backup generators are not the same as bridge power or a local power plant. A community-benefit agreement is not a substitute for proving unresolved harms are not being hidden.</p>
+<p>The first job is not persuasion. The first job is classification.</p>
+<p>If your company exists to build frontier AI systems, do not let a pipe strike, a missing construction meter, a bad stormwater inspection, a ratepayer cost-shift, a poorly muffled generator, a sloppy tax deal, or a weak community-benefit promise become the public&#x27;s proof that your entire industry is institutionally reckless. These issues may be &quot;non-core&quot; to the model lab. They are not non-core to the facility. They are your responsibility the moment your project creates them.</p>
+<p>The standard is not &quot;data centers are fine.&quot; That would be lazy. The current concern is not imaginary. People are looking at giant compounds, utility load, water headlines, AI anxiety, construction incidents, noise complaints, tax incentives, limited local upside, and vague reporting, and they are asking a rational question: why should my community carry this burden?</p>
+<p>The right answer is not to tell them they are wrong.</p>
+<p>The right answer is to make the infrastructure good enough across the board that the burden, benefit, and proof can survive public inspection.</p>
+<p>That means:</p>
+<ul><li>publish the local proof package before rumor does the work for you;</li><li>separate construction water, operating cooling water, indirect power water, water quality, and utility capacity before the public collapses them into one scandal;</li><li>show who pays for grid upgrades and what protects existing customers;</li><li>prove the difference between backup generation, bridge power, and local power production;</li><li>model noise at the receptors people actually live in, not only at the boundary that makes the spreadsheet look clean;</li><li>treat heat rejection, liquid cooling, thermal storage, and heat reuse as public-impact design questions, not only facility-efficiency questions;</li><li>make community benefit durable, funded, maintained, and visible after the launch event;</li><li>define redesign and no-build gates before a project becomes too politically expensive to correct;</li><li>protect legitimate security details without using security as a blanket excuse for civic opacity.</li></ul>
+<p>This is not a request to slow down for the sake of slowing down.</p>
+<p>It is a request to stop confusing speed with thin proof.</p>
+<p>The companies that can build frontier AI systems can also build a better public operating model for the facilities that make those systems possible.</p>
+<p>The proof layer should be engineered with the same seriousness as the campus.</p>
+<p>Full paper:</p>
+<p>&lt;https://saucony.github.io/legitimacy-is-infrastructure/&gt;</p>
     </main>
   </div>
 </body>
 </html>
-"""
-
-
-def find_chrome(explicit: str | None) -> str:
-    candidates = [
-        explicit,
-        os.environ.get("CHROME_PATH"),
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        shutil.which("google-chrome"),
-        shutil.which("chromium"),
-        shutil.which("chromium-browser"),
-    ]
-    for candidate in candidates:
-        if candidate and Path(candidate).exists():
-            return str(candidate)
-    raise SystemExit("Chrome/Chromium not found; pass --chrome or set CHROME_PATH.")
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--paper", required=True, type=Path)
-    parser.add_argument("--html", required=True, type=Path)
-    parser.add_argument("--index", type=Path)
-    parser.add_argument("--pdf", type=Path)
-    parser.add_argument("--chrome")
-    parser.add_argument("--canonical-url", default=SITE_URL)
-    parser.add_argument("--description", default=DEFAULT_DESCRIPTION)
-    parser.add_argument("--eyebrow", default="Technical Position Paper")
-    parser.add_argument("--meta", default=DEFAULT_META)
-    parser.add_argument("--social-image-url", default=SOCIAL_IMAGE_URL)
-    args = parser.parse_args()
-
-    markdown = args.paper.read_text(encoding="utf-8")
-    html_text = render_document(
-        markdown,
-        canonical_url=args.canonical_url,
-        description=args.description,
-        eyebrow=args.eyebrow,
-        meta=args.meta,
-        social_image_url=args.social_image_url,
-    )
-    args.html.write_text(html_text, encoding="utf-8")
-    if args.index:
-        args.index.write_text(html_text, encoding="utf-8")
-
-    if args.pdf:
-        chrome = find_chrome(args.chrome)
-        subprocess.run(
-            [
-                chrome,
-                "--headless",
-                "--disable-gpu",
-                "--no-sandbox",
-                "--no-pdf-header-footer",
-                f"--print-to-pdf={args.pdf}",
-                args.html.resolve().as_uri(),
-            ],
-            check=True,
-        )
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
