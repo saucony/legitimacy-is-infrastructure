@@ -10,7 +10,7 @@ The answer is not PR. The answer is proof, category discipline, redesign gates, 
 
 ## Read
 
-- [Designed dark-mode paper](paper.html)
+- [Designed dark-mode paper](https://saucony.github.io/legitimacy-is-infrastructure/)
 - [Canonical Markdown](paper.md)
 - [PDF snapshot](paper.pdf)
 - [Source notes](sources.md)
@@ -28,7 +28,7 @@ The goal is not anti-build delay. The goal is the opposite: build faster by prov
 To regenerate the designed artifacts locally:
 
 ```sh
-python3 tools/render_dark_paper.py --paper paper.md --html paper.html --pdf paper.pdf
+python3 tools/render_dark_paper.py --paper paper.md --html paper.html --index index.html --pdf paper.pdf
 ```
 
 The renderer uses only Python standard library plus local Chrome/Chromium for PDF export.

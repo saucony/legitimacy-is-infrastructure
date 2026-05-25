@@ -404,6 +404,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--paper", required=True, type=Path)
     parser.add_argument("--html", required=True, type=Path)
+    parser.add_argument("--index", type=Path)
     parser.add_argument("--pdf", required=True, type=Path)
     parser.add_argument("--chrome")
     args = parser.parse_args()
@@ -411,6 +412,8 @@ def main() -> int:
     markdown = args.paper.read_text(encoding="utf-8")
     html_text = render_document(markdown)
     args.html.write_text(html_text, encoding="utf-8")
+    if args.index:
+        args.index.write_text(html_text, encoding="utf-8")
 
     chrome = find_chrome(args.chrome)
     subprocess.run(
