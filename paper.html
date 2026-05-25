@@ -62,6 +62,9 @@
     .side-toc {
       display: none;
     }
+    .floating-toc {
+      display: none;
+    }
     .masthead {
       border-bottom: 1px solid var(--rule);
       margin-bottom: 42px;
@@ -138,7 +141,78 @@
     }
     .toc a:hover { color: var(--text); }
     .toc-level-2 { padding-left: 12px; }
-    .top-toc { display: block; }
+    .top-toc { display: none; }
+    .floating-toc {
+      bottom: max(14px, env(safe-area-inset-bottom));
+      display: block;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      position: fixed;
+      right: max(14px, env(safe-area-inset-right));
+      z-index: 20;
+    }
+    .floating-toc summary {
+      background: rgba(15, 19, 28, 0.94);
+      border: 1px solid rgba(139, 211, 255, 0.46);
+      border-radius: 999px;
+      box-shadow: 0 16px 46px rgba(0, 0, 0, 0.34);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      list-style: none;
+      padding: 12px 15px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .floating-toc summary::-webkit-details-marker {
+      display: none;
+    }
+    .floating-toc summary::after {
+      color: var(--accent-2);
+      content: " +";
+    }
+    .floating-toc[open] summary::after {
+      content: " x";
+    }
+    .floating-toc:not([open]) .floating-toc-panel {
+      display: none;
+    }
+    .floating-toc-panel {
+      background: rgba(15, 19, 28, 0.97);
+      border: 1px solid rgba(39, 50, 70, 0.9);
+      border-radius: 14px;
+      bottom: calc(100% + 10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.48);
+      max-height: min(68vh, 560px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 16px 18px;
+      position: absolute;
+      right: 0;
+      scrollbar-color: rgba(139, 211, 255, 0.42) rgba(15, 19, 28, 0.45);
+      scrollbar-width: thin;
+      width: min(360px, calc(100vw - 28px));
+    }
+    .floating-toc-panel a {
+      border: 0;
+      color: var(--muted);
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+      margin: 0;
+      overflow-wrap: break-word;
+      padding: 6px 0;
+      text-decoration: none;
+    }
+    .floating-toc-panel a:hover,
+    .floating-toc-panel a:focus {
+      color: var(--text);
+    }
+    .floating-toc-panel .toc-level-2 {
+      padding-left: 0;
+    }
     h1, h2, h3, h4, h5, h6 {
       color: var(--text);
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -326,6 +400,9 @@
       .top-toc {
         display: none;
       }
+      .floating-toc {
+        display: none;
+      }
       h1, h2, h3, h4, h5, h6 {
         scroll-margin-top: 28px;
       }
@@ -335,6 +412,7 @@
       .layout { display: block; max-width: none; padding: 0; }
       .page { max-width: none; padding: 0; }
       .side-toc { display: none; }
+      .floating-toc { display: none; }
       .top-toc { display: block; }
       .toc { break-inside: avoid; }
       h2 { break-after: avoid; }
@@ -374,6 +452,38 @@
 <a class="toc-level-2" href="#energy-warning-and-anti-build-fatalism">Energy Warning And Anti-Build Fatalism</a>
 <a class="toc-level-2" href="#over-deliver">Over-Deliver</a>
     </nav>
+    <details class="floating-toc">
+      <summary>Contents</summary>
+      <nav class="floating-toc-panel" aria-label="Floating table of contents">
+        <a class="toc-level-2" href="#thesis">Thesis</a>
+<a class="toc-level-2" href="#the-ask">The Ask</a>
+<a class="toc-level-2" href="#the-backlash-is-real">The Backlash Is Real</a>
+<a class="toc-level-2" href="#the-critics-are-not-all-wrong">The Critics Are Not All Wrong</a>
+<a class="toc-level-2" href="#the-industry-is-not-starting-from-zero">The Industry Is Not Starting From Zero</a>
+<a class="toc-level-2" href="#category-discipline">Category Discipline</a>
+<a class="toc-level-2" href="#water">Water</a>
+<a class="toc-level-2" href="#scale-comparisons-do-not-settle-legitimacy">Scale Comparisons Do Not Settle Legitimacy</a>
+<a class="toc-level-2" href="#grid-and-ratepayers">Grid And Ratepayers</a>
+<a class="toc-level-2" href="#carbon-firm-power-and-flexible-workloads">Carbon, Firm Power, And Flexible Workloads</a>
+<a class="toc-level-2" href="#thermal-design-heat-reuse-and-subsurface-options">Thermal Design, Heat Reuse, And Subsurface Options</a>
+<a class="toc-level-2" href="#land-ecology-and-embodied-carbon">Land, Ecology, And Embodied Carbon</a>
+<a class="toc-level-2" href="#noise">Noise</a>
+<a class="toc-level-2" href="#proof-before-permission">Proof-Before-Permission</a>
+<a class="toc-level-2" href="#security-aware-transparency">Security-Aware Transparency</a>
+<a class="toc-level-2" href="#who-owns-the-proof">Who Owns The Proof</a>
+<a class="toc-level-2" href="#no-build-gates">No-Build Gates</a>
+<a class="toc-level-2" href="#the-football-club-model">The Football-Club Model</a>
+<a class="toc-level-2" href="#stadium-logic-is-the-warning-label">Stadium Logic Is The Warning Label</a>
+<a class="toc-level-2" href="#community-benefit">Community Benefit</a>
+<a class="toc-level-2" href="#the-local-upside">The Local Upside</a>
+<a class="toc-level-2" href="#culture">Culture</a>
+<a class="toc-level-2" href="#circular-compute">Circular Compute</a>
+<a class="toc-level-2" href="#the-baseline-proof-package">The Baseline Proof Package</a>
+<a class="toc-level-2" href="#strategic-compute">Strategic Compute</a>
+<a class="toc-level-2" href="#energy-warning-and-anti-build-fatalism">Energy Warning And Anti-Build Fatalism</a>
+<a class="toc-level-2" href="#over-deliver">Over-Deliver</a>
+      </nav>
+    </details>
     <main class="page">
       <header class="masthead">
         <div class="eyebrow">Technical Position Paper</div>

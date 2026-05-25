@@ -228,6 +228,9 @@ def render_document(markdown: str) -> str:
     .side-toc {
       display: none;
     }
+    .floating-toc {
+      display: none;
+    }
     .masthead {
       border-bottom: 1px solid var(--rule);
       margin-bottom: 42px;
@@ -304,7 +307,78 @@ def render_document(markdown: str) -> str:
     }
     .toc a:hover { color: var(--text); }
     .toc-level-2 { padding-left: 12px; }
-    .top-toc { display: block; }
+    .top-toc { display: none; }
+    .floating-toc {
+      bottom: max(14px, env(safe-area-inset-bottom));
+      display: block;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      position: fixed;
+      right: max(14px, env(safe-area-inset-right));
+      z-index: 20;
+    }
+    .floating-toc summary {
+      background: rgba(15, 19, 28, 0.94);
+      border: 1px solid rgba(139, 211, 255, 0.46);
+      border-radius: 999px;
+      box-shadow: 0 16px 46px rgba(0, 0, 0, 0.34);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      list-style: none;
+      padding: 12px 15px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .floating-toc summary::-webkit-details-marker {
+      display: none;
+    }
+    .floating-toc summary::after {
+      color: var(--accent-2);
+      content: " +";
+    }
+    .floating-toc[open] summary::after {
+      content: " x";
+    }
+    .floating-toc:not([open]) .floating-toc-panel {
+      display: none;
+    }
+    .floating-toc-panel {
+      background: rgba(15, 19, 28, 0.97);
+      border: 1px solid rgba(39, 50, 70, 0.9);
+      border-radius: 14px;
+      bottom: calc(100% + 10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.48);
+      max-height: min(68vh, 560px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 16px 18px;
+      position: absolute;
+      right: 0;
+      scrollbar-color: rgba(139, 211, 255, 0.42) rgba(15, 19, 28, 0.45);
+      scrollbar-width: thin;
+      width: min(360px, calc(100vw - 28px));
+    }
+    .floating-toc-panel a {
+      border: 0;
+      color: var(--muted);
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+      margin: 0;
+      overflow-wrap: break-word;
+      padding: 6px 0;
+      text-decoration: none;
+    }
+    .floating-toc-panel a:hover,
+    .floating-toc-panel a:focus {
+      color: var(--text);
+    }
+    .floating-toc-panel .toc-level-2 {
+      padding-left: 0;
+    }
     h1, h2, h3, h4, h5, h6 {
       color: var(--text);
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -492,6 +566,9 @@ def render_document(markdown: str) -> str:
       .top-toc {
         display: none;
       }
+      .floating-toc {
+        display: none;
+      }
       h1, h2, h3, h4, h5, h6 {
         scroll-margin-top: 28px;
       }
@@ -501,6 +578,7 @@ def render_document(markdown: str) -> str:
       .layout { display: block; max-width: none; padding: 0; }
       .page { max-width: none; padding: 0; }
       .side-toc { display: none; }
+      .floating-toc { display: none; }
       .top-toc { display: block; }
       .toc { break-inside: avoid; }
       h2 { break-after: avoid; }
@@ -521,6 +599,12 @@ def render_document(markdown: str) -> str:
       <div class="toc-title">Contents</div>
       {toc_links}
     </nav>
+    <details class="floating-toc">
+      <summary>Contents</summary>
+      <nav class="floating-toc-panel" aria-label="Floating table of contents">
+        {toc_links}
+      </nav>
+    </details>
     <main class="page">
       <header class="masthead">
         <div class="eyebrow">Technical Position Paper</div>
