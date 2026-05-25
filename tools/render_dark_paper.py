@@ -434,13 +434,17 @@ def render_document(markdown: str) -> str:
         word-break: normal;
       }
     }
-    @media screen and (min-width: 1240px) {
+    @media screen and (min-width: 900px) {
       .layout {
-        --side-toc-left: max(24px, calc((100vw - 1220px) / 2));
+        --side-toc-left: max(16px, calc((100vw - 1220px) / 2));
+        --side-toc-width: clamp(248px, 24vw, 300px);
+        --side-toc-gap: clamp(24px, 3vw, 44px);
         display: block;
-        margin-left: calc(var(--side-toc-left) + 334px);
-        margin-right: auto;
-        max-width: 860px;
+        margin-left: calc(var(--side-toc-left) + var(--side-toc-width) + var(--side-toc-gap));
+        margin-right: 24px;
+        max-width: min(860px, calc(100vw - var(--side-toc-left) - var(--side-toc-width) - var(--side-toc-gap) - 24px));
+        padding-left: clamp(24px, 2.4vw, 34px);
+        padding-right: clamp(24px, 2.4vw, 34px);
       }
       .page { max-width: 840px; }
       .side-toc {
@@ -459,7 +463,7 @@ def render_document(markdown: str) -> str:
         scrollbar-color: rgba(139, 211, 255, 0.42) rgba(15, 19, 28, 0.45);
         scrollbar-width: thin;
         top: 16px;
-        width: 300px;
+        width: var(--side-toc-width);
       }
       .side-toc .toc-title {
         color: var(--accent-2);
@@ -471,8 +475,8 @@ def render_document(markdown: str) -> str:
         color: var(--muted);
         display: block;
         font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-size: 11.4px;
-        line-height: 1.14;
+        font-size: clamp(9.8px, 0.9vw, 11.4px);
+        line-height: 1.12;
         margin: 0;
         overflow-wrap: break-word;
         padding: 3.8px 0;
