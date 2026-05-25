@@ -189,7 +189,11 @@ def render_document(markdown: str) -> str:
       background: var(--bg);
     }
     * { box-sizing: border-box; }
-    html { background: var(--bg); }
+    html {
+      background: var(--bg);
+      overflow-x: hidden;
+      width: 100%;
+    }
     body {
       margin: 0;
       background:
@@ -201,11 +205,28 @@ def render_document(markdown: str) -> str:
       line-height: 1.62;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      margin: 0 auto;
+      max-width: 980px;
+      min-width: 0;
+      padding: 72px 34px 96px;
+      width: 100%;
     }
     .page {
+      margin: 0;
       max-width: 980px;
-      margin: 0 auto;
-      padding: 72px 34px 96px;
+      min-width: 0;
+      padding: 0;
+      width: 100%;
+    }
+    .side-toc {
+      display: none;
     }
     .masthead {
       border-bottom: 1px solid var(--rule);
@@ -228,6 +249,8 @@ def render_document(markdown: str) -> str:
       line-height: 0.98;
       margin: 20px 0 20px;
       max-width: 820px;
+      overflow-wrap: break-word;
+      width: 100%;
     }
     .dek {
       color: var(--muted);
@@ -236,6 +259,8 @@ def render_document(markdown: str) -> str:
       line-height: 1.45;
       margin-top: -8px;
       max-width: 760px;
+      overflow-wrap: break-word;
+      width: 100%;
     }
     .meta {
       color: var(--faint);
@@ -248,7 +273,10 @@ def render_document(markdown: str) -> str:
       border: 1px solid var(--rule);
       border-radius: 14px;
       margin: 32px 0 54px;
+      max-width: 100%;
+      overflow: hidden;
       padding: 22px 24px;
+      width: 100%;
     }
     .toc-title {
       color: var(--accent);
@@ -267,16 +295,23 @@ def render_document(markdown: str) -> str:
       font-size: 14px;
       line-height: 1.35;
       margin: 8px 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
       text-decoration: none;
+      white-space: normal;
+      width: 100%;
     }
     .toc a:hover { color: var(--text); }
     .toc-level-2 { padding-left: 12px; }
+    .top-toc { display: block; }
     h1, h2, h3, h4, h5, h6 {
       color: var(--text);
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0;
       line-height: 1.12;
       page-break-after: avoid;
+      scroll-margin-top: 24px;
     }
     h1 { font-size: 44px; margin: 46px 0 18px; }
     h2 {
@@ -286,7 +321,12 @@ def render_document(markdown: str) -> str:
       padding-top: 26px;
     }
     h3 { color: #d8e5f4; font-size: 22px; margin: 34px 0 12px; }
-    p { margin: 0 0 18px; max-width: 760px; }
+    p {
+      margin: 0 0 18px;
+      max-width: 760px;
+      overflow-wrap: break-word;
+      width: 100%;
+    }
     a {
       border-bottom: 1px solid rgba(139, 211, 255, 0.42);
       color: var(--accent);
@@ -296,8 +336,13 @@ def render_document(markdown: str) -> str:
       margin: 0 0 22px 1.2em;
       max-width: 760px;
       padding: 0;
+      width: calc(100% - 1.2em);
     }
-    li { margin: 7px 0; padding-left: 0.2em; }
+    li {
+      margin: 7px 0;
+      overflow-wrap: break-word;
+      padding-left: 0.2em;
+    }
     blockquote {
       border-left: 3px solid var(--accent);
       color: #dce3ed;
@@ -340,6 +385,7 @@ def render_document(markdown: str) -> str:
     }
     th, td {
       border-bottom: 1px solid var(--rule);
+      overflow-wrap: break-word;
       padding: 11px 12px;
       text-align: left;
       vertical-align: top;
@@ -350,9 +396,100 @@ def render_document(markdown: str) -> str:
       font-weight: 700;
     }
     tr:last-child td { border-bottom: 0; }
+    @media screen and (max-width: 640px) {
+      body { font-size: 16px; }
+      .layout {
+        display: block;
+        max-width: none;
+        padding: 64px 22px 80px;
+        width: 100%;
+      }
+      .page {
+        max-width: none;
+        width: 100%;
+      }
+      .masthead,
+      .toc,
+      .table-wrap,
+      .masthead-title,
+      .dek,
+      p,
+      ul,
+      ol,
+      blockquote {
+        max-width: 100%;
+      }
+      .masthead-title { font-size: 46px; }
+      .dek { font-size: 17px; }
+      .toc {
+        overflow: hidden;
+        padding: 20px 18px;
+        width: 100%;
+      }
+      .toc a {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        white-space: normal;
+        width: 100%;
+        word-break: normal;
+      }
+    }
+    @media screen and (min-width: 1240px) {
+      .layout {
+        align-items: start;
+        gap: 40px;
+        grid-template-columns: 250px minmax(0, 840px);
+        max-width: 1210px;
+      }
+      .page { max-width: 840px; }
+      .side-toc {
+        align-self: start;
+        background: rgba(15, 19, 28, 0.82);
+        border: 1px solid rgba(39, 50, 70, 0.82);
+        border-radius: 14px;
+        display: block;
+        max-height: calc(100vh - 42px);
+        overflow-y: auto;
+        padding: 18px 16px;
+        position: sticky;
+        top: 20px;
+      }
+      .side-toc .toc-title {
+        color: var(--accent-2);
+        font-size: 11px;
+        margin-bottom: 12px;
+      }
+      .side-toc a {
+        border: 0;
+        color: var(--muted);
+        display: block;
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 12.5px;
+        line-height: 1.22;
+        margin: 0;
+        padding: 6px 0;
+        text-decoration: none;
+      }
+      .side-toc a:hover,
+      .side-toc a:focus {
+        color: var(--text);
+      }
+      .side-toc .toc-level-2 {
+        padding-left: 0;
+      }
+      .top-toc {
+        display: none;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        scroll-margin-top: 28px;
+      }
+    }
     @media print {
       body { font-size: 11.4pt; }
+      .layout { display: block; max-width: none; padding: 0; }
       .page { max-width: none; padding: 0; }
+      .side-toc { display: none; }
+      .top-toc { display: block; }
       .toc { break-inside: avoid; }
       h2 { break-after: avoid; }
       a { color: var(--accent); }
@@ -367,19 +504,25 @@ def render_document(markdown: str) -> str:
   <style>{css}</style>
 </head>
 <body>
-  <main class="page">
-    <header class="masthead">
-      <div class="eyebrow">Technical Position Paper</div>
-      <h1 class="masthead-title">{html.escape(title)}</h1>
-      <div class="dek">A pro-build operating doctrine for AI data centers: proof, category discipline, civic legitimacy, and strategic compute capacity.</div>
-      <div class="meta">Sasan Salmanzadeh - Version 0.1.0 - May 24, 2026</div>
-    </header>
-    <nav class="toc" aria-label="Table of contents">
+  <div class="layout">
+    <nav class="side-toc" aria-label="Persistent table of contents">
       <div class="toc-title">Contents</div>
       {toc_links}
     </nav>
-    {body}
-  </main>
+    <main class="page">
+      <header class="masthead">
+        <div class="eyebrow">Technical Position Paper</div>
+        <h1 class="masthead-title">{html.escape(title)}</h1>
+        <div class="dek">A pro-build operating doctrine for AI data centers: proof, category discipline, civic legitimacy, and strategic compute capacity.</div>
+        <div class="meta">Sasan Salmanzadeh - Version 0.1.0 - May 24, 2026</div>
+      </header>
+      <nav class="toc top-toc" aria-label="Table of contents">
+        <div class="toc-title">Contents</div>
+        {toc_links}
+      </nav>
+      {body}
+    </main>
+  </div>
 </body>
 </html>
 """
