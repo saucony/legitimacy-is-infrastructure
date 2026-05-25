@@ -316,7 +316,8 @@ def render_document(markdown: str) -> str:
       right: max(14px, env(safe-area-inset-right));
       z-index: 20;
     }
-    .floating-toc summary {
+    .floating-toc-button {
+      appearance: none;
       background: linear-gradient(135deg, #d8f4ff 0%, #c7ffd7 100%);
       border: 1px solid rgba(235, 255, 247, 0.82);
       border-radius: 999px;
@@ -330,46 +331,48 @@ def render_document(markdown: str) -> str:
       font-weight: 800;
       letter-spacing: 0.08em;
       line-height: 1;
-      list-style: none;
       padding: 12px 15px;
       text-transform: uppercase;
       user-select: none;
     }
-    .floating-toc summary:hover,
-    .floating-toc summary:focus {
+    .floating-toc-button:hover,
+    .floating-toc-button:focus {
       background: linear-gradient(135deg, #f1fbff 0%, #d6ffd7 100%);
       border-color: rgba(255, 255, 255, 0.95);
       outline: 2px solid rgba(139, 211, 255, 0.38);
       outline-offset: 3px;
     }
-    .floating-toc summary::-webkit-details-marker {
-      display: none;
-    }
-    .floating-toc summary::after {
+    .floating-toc-button::after {
       color: #0d4f38;
       content: " +";
     }
-    .floating-toc[open] summary::after {
+    .floating-toc:has(.floating-toc-panel:popover-open) .floating-toc-button::after {
       content: " x";
-    }
-    .floating-toc:not([open]) .floating-toc-panel {
-      display: none;
     }
     .floating-toc-panel {
       background: rgba(15, 19, 28, 0.97);
       border: 1px solid rgba(39, 50, 70, 0.9);
       border-radius: 14px;
-      bottom: calc(100% + 10px);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.48);
+      color: var(--text);
+      display: none;
+      margin: 0;
       max-height: min(68vh, 560px);
       overflow-y: auto;
       overscroll-behavior: contain;
       padding: 16px 18px;
-      position: absolute;
-      right: 0;
       scrollbar-color: rgba(139, 211, 255, 0.42) rgba(15, 19, 28, 0.45);
       scrollbar-width: thin;
       width: min(360px, calc(100vw - 28px));
+    }
+    .floating-toc-panel:popover-open {
+      bottom: auto;
+      display: block;
+      inset: auto;
+      left: auto;
+      position: fixed;
+      right: 14px;
+      top: max(14px, calc(100vh - min(68vh, 560px) - 62px));
     }
     .floating-toc-panel a {
       border: 0;
@@ -609,12 +612,12 @@ def render_document(markdown: str) -> str:
       <div class="toc-title">Contents</div>
       {toc_links}
     </nav>
-    <details class="floating-toc">
-      <summary>Contents</summary>
-      <nav class="floating-toc-panel" aria-label="Floating table of contents">
+    <div class="floating-toc">
+      <button class="floating-toc-button" popovertarget="floating-toc-popover" type="button">Contents</button>
+      <nav class="floating-toc-panel" id="floating-toc-popover" popover aria-label="Floating table of contents">
         {toc_links}
       </nav>
-    </details>
+    </div>
     <main class="page">
       <header class="masthead">
         <div class="eyebrow">Technical Position Paper</div>
