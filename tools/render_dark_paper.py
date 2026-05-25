@@ -317,11 +317,14 @@ def render_document(markdown: str) -> str:
       z-index: 20;
     }
     .floating-toc summary {
-      background: rgba(15, 19, 28, 0.94);
-      border: 1px solid rgba(139, 211, 255, 0.46);
+      background: linear-gradient(135deg, #d8f4ff 0%, #c7ffd7 100%);
+      border: 1px solid rgba(235, 255, 247, 0.82);
       border-radius: 999px;
-      box-shadow: 0 16px 46px rgba(0, 0, 0, 0.34);
-      color: var(--text);
+      box-shadow:
+        0 0 0 1px rgba(139, 211, 255, 0.26),
+        0 16px 48px rgba(0, 0, 0, 0.42),
+        0 0 32px rgba(139, 211, 255, 0.18);
+      color: #071019;
       cursor: pointer;
       font-size: 12px;
       font-weight: 800;
@@ -332,11 +335,18 @@ def render_document(markdown: str) -> str:
       text-transform: uppercase;
       user-select: none;
     }
+    .floating-toc summary:hover,
+    .floating-toc summary:focus {
+      background: linear-gradient(135deg, #f1fbff 0%, #d6ffd7 100%);
+      border-color: rgba(255, 255, 255, 0.95);
+      outline: 2px solid rgba(139, 211, 255, 0.38);
+      outline-offset: 3px;
+    }
     .floating-toc summary::-webkit-details-marker {
       display: none;
     }
     .floating-toc summary::after {
-      color: var(--accent-2);
+      color: #0d4f38;
       content: " +";
     }
     .floating-toc[open] summary::after {
