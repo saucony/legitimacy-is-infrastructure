@@ -7,6 +7,14 @@ authors:
   - family-names: "Salmanzadeh"
     given-names: "Sasan"
 date-released: 2026-05-24
-version: "0.1.0-private"
+version: "0.1.0"
+url: "https://github.com/saucony/legitimacy-is-infrastructure"
 repository-code: "https://github.com/saucony/legitimacy-is-infrastructure"
-license: "All rights reserved"
+preferred-citation:
+  type: report
+  title: "Legitimacy Is Infrastructure"
+  authors:
+    - family-names: "Salmanzadeh"
+      given-names: "Sasan"
+  year: 2026
+  url: "https://github.com/saucony/legitimacy-is-infrastructure"
